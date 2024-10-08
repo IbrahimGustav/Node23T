@@ -7,5 +7,8 @@
   },
   "author": "Ibrahim",
   "license": "GPL-2.0",
-  "description": "Node Courses Exercise"
+  "description": "Node Courses Exercise",
+  "dependencies": {
+    "prompt-sync": "^4.2.0"
+  }
 }

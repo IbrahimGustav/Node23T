@@ -14,7 +14,6 @@ const getAllUsers = async (req,res) => {
 const getUserByID = async (req,res) => {
     try {
         const user = await userModel.getUserByID(req.params.id)
-        if(!user) res.json({message:'User Not Found'})
         res.json(user)
     } catch (error) {
         console.log(error)

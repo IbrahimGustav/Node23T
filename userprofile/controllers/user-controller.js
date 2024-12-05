@@ -11,9 +11,9 @@ const getAllUsers = async (req,res) => {
     }    
 }
 
-const getUserByID = async (req,res) => {
+const getUserById = async (req,res) => {
     try {
-        const user = await userModel.getUserByID(req.params.id)
+        const user = await userModel.getUserById(req.params.id)
         res.json(user)
     } catch (error) {
         console.log(error)
@@ -21,4 +21,4 @@ const getUserByID = async (req,res) => {
     }
 }
 
-module.exports = {getAllUsers, getUserByID}
+module.exports = {getAllUsers, getUserById}

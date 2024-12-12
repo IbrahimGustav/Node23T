@@ -21,4 +21,25 @@ const getUserById = async (req,res) => {
     }
 }
 
-module.exports = {getAllUsers, getUserById}
+const addUser = async (req, res) => {
+    try {
+        const newUserId = await userModel.addUser(req.body)
+        req.status(200).json({id:newUserId,...req.body})
+    } catch (error) {
+        res.status(500).json({message:'Error Insert Data', error})
+        console.log(error);
+    }
+}
+
+const updateUser = async (req,res) => {
+    try {
+        const updateUserId = await userModel.updateUser(req.body)
+        req.status(200).json({id:updateUserId,...req.body})
+    } catch (error) {
+        res.status(500).json({message:'Error Update Data', error})
+        console.log(error);
+        
+    }
+}
+
+module.exports = {getAllUsers, getUserById, addUser, updateUser}

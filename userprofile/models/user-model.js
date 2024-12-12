@@ -9,4 +9,16 @@ const getUserById = async (id) =>{
     return row
 }
 
-module.exports = {getAllUsers, getUserById}
+const addUser = async (user) => {
+    const {name, email, phone} = user
+    const [result] = await db.query('insert into users (name,email,phone) values(?,?,?)', [name, email, phone])
+    return result.insertId    
+}
+
+const updateUser = async (user) => {
+    const {name, email, phone} = user
+    const [result] = await db.query('update into users (name,email,phone values(?,?,?)', [name, email, phone])
+    return result.updateId
+}
+
+module.exports = {getAllUsers, getUserById, addUser, updateUser}

@@ -31,15 +31,26 @@ const addUser = async (req, res) => {
     }
 }
 
-const updateUser = async (req,res) => {
+const updateUser = async (req, res) => {
     try {
-        const updateUserId = await userModel.updateUser(req.body)
-        req.status(200).json({id:updateUserId,...req.body})
+        const updated = await userModel.updateUser(req.params.id, req.body);
+        if (!updated) return res.status(404).json({ message: 'User Not Found' });
+        res.status(200).json({ message: 'User Updated Successfully', id: req.params.id, ...req.body });
     } catch (error) {
-        res.status(500).json({message:'Error Update Data', error})
-        console.log(error);
-        
+        console.error(error);
+        res.status(500).json({ message: 'Error Update Data', error });
     }
 }
 
-module.exports = {getAllUsers, getUserById, addUser, updateUser}
+const deleteUser = async (req, res) => {
+    try {
+        const deleted = await userModel.deleteUser(req.params.index);
+        if (!deleted) return res.status(404).json({ message: 'User Not Found' });
+        res.status(200).json({ message: 'User Deleted Successfully', index: req.params.index });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error Delete Data', error });
+    }
+}
+
+module.exports = {getAllUsers, getUserById, addUser, updateUser, deleteUser}

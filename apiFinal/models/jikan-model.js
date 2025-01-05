@@ -1,26 +1,31 @@
-const createAnime = (anime) => {
-    return {
-        title: anime.title,
-        synopsis: anime.synopsis,
-        image_url: anime.images?.jpg?.image_url,
-        score: anime.score,
-        episodes: anime.episodes,
-        type: anime.type,
-        url: anime.url,
-    };
-};
+const createAnime = (anime) => ({
+    title: anime.title || 'N/A',
+    synopsis: anime.synopsis || 'No synopsis available.',
+    image_url: anime.images?.jpg?.image_url || null,
+    score: anime.score || 0,
+    episodes: anime.episodes || 'Unknown',
+    studios: anime.studios?.map(studio => studio.name) || [],
+    type: anime.type || 'Unknown',
+    url: anime.url || '#',
+});
 
-const createManga = (manga) => {
-    return {
-        title: manga.title,
-        synopsis: manga.synopsis,
-        image_url: manga.images?.jpg?.image_url,
-        score: manga.score,
-        url: manga.url,
-        chapters: manga.chapters, // Add chapters
-        volumes: manga.volumes,   // Add volumes
-        type: manga.type, // add type
-    };
-};
+const createManga = (manga) => ({
+    title: manga.title || 'N/A',
+    synopsis: manga.synopsis || 'No synopsis available.',
+    image_url: manga.images?.jpg?.image_url || null,
+    score: manga.score || 0,
+    url: manga.url || '#',
+    chapters: manga.chapters || 'Unknown',
+    volumes: manga.volumes || 'Unknown',
+    type: manga.type || 'Unknown',
+});
 
-module.exports = { createAnime, createManga }; // Export both functions
+const createSeasonsNow = (anime) => ({
+    title: anime.title || 'N/A',
+    image_url: anime.images?.jpg?.image_url || null,
+    episodes: anime.episodes || 'Unknown',
+    type: anime.type || 'Unknown',
+    url: anime.url || '#',
+});
+
+module.exports = { createAnime, createManga, createSeasonsNow };

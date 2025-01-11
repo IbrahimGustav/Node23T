@@ -45,6 +45,15 @@ const searchAnime = async (req, res) => {
     }
 };
 
+const searchAnimeRanking = async (req, res) => {
+    try {
+        const seasonsNowResult = await fetchFromJikan('/seasons/now', {}, createSeasonsNow);
+        return res.status(200).json(seasonsNowResult);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
 const searchManga = async (req, res) => {
     const query = req.query.q;
     if (!query) {

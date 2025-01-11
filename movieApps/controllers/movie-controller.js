@@ -26,4 +26,19 @@ const searchMovie = async (req,res)=>{
     }
 }
 
-module.exports = {searchMovie}
+const searchPopularMovie = async (req, res) => {
+    try {
+        const response = await tmdb.get('/discover/movie', {
+            params: { sort_by: 'popularity.desc' }
+        });
+
+        const movieResult = response.data.results.map(createMovie)
+        cache.set('popular_movies', movieResult)
+        return res.status(200).json(movieResult)
+    } catch (error) {
+        console.error('Error fetching popular movies:', error)
+        return res.status(500).json({ message: 'Error fetching popular movies' })
+    }   
+}
+
+module.exports = {searchMovie, searchPopularMovie}

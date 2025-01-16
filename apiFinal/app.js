@@ -11,5 +11,5 @@ app.use('/api', router)
 const port = process.env.PORT
 
 app.listen(port,()=>{
-    console.log('Server at http://localhost:${port}/api/search');
+    console.log('Server at http://localhost:${port}/api/');
 })

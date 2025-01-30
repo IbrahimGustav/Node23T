@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = 'asfhilq2y9o47hajwy4r8q9yrf8ahbfsvc98';
 
-// User Registration
 const userRegistration = async (data) => {
     const { email, username, password } = data;
 
@@ -28,7 +27,6 @@ const userRegistration = async (data) => {
     }
 };
 
-// User Login
 const userLogin = async (data) => {
     const { username, password } = data;
 
@@ -67,7 +65,7 @@ const userLogin = async (data) => {
     }
 };
 
-// Get All Users
+
 const getAllUsers = async () => {
     try {
         const query = "SELECT * FROM users";

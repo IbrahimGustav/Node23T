@@ -11,7 +11,7 @@ const userAuth = (req, res, next) => {
     try {
         const user = jwt.verify(token, SECRET_KEY);
         req.user = user;
-        next(); // Pass control to the next middleware or route handler
+        next(); 
     } catch (error) {
         console.error('JWT verification failed:', error.message);
         return res.status(401).json({ message: 'Unauthorized: Invalid or expired token' });

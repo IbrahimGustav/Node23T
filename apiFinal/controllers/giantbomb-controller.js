@@ -16,7 +16,10 @@ const fetchFromGiantbomb = async (endpoint, params = {}, cacheKey = null) => {
           throw new Error(`Giant Bomb API Error: ${response.data.error}`);
       }
 
-      const result = createGame(response.data.results);
+      const result = Array.isArray(response.data.results)
+  ? response.data.results.map(createGame)
+  : createGame(response.data.results);
+
 
       if (cacheKey) cache.set(cacheKey, result);
 
@@ -35,7 +38,13 @@ const searchGames = async (req, res) => {
 
     try {
       const cacheKey = `searchGames:${query}`;
-      const games = await fetchFromGiantbomb('/search', { query, resources: 'game', limit: 20, field_list: 'id,name,deck,description,image,platforms' }, cacheKey);
+      const games = await fetchFromGiantbomb('/search', { 
+        query, 
+        resources: 'game', 
+        limit: 20, 
+        field_list: 'id,name,deck,description,image,platforms' 
+      }, cacheKey);
+      
       res.json(games);
     } catch (error) {
       console.error("Giant Bomb API Error:", error);

@@ -30,10 +30,10 @@ const fetchFromGiantbomb = async (endpoint, params = {}, cacheKey = null) => {
 
 
 const createGame = (gameData) => ({
-  id: gameData.id || null,
-  name: gameData.name || 'Unknown Name',
-  deck: gameData.deck || 'No summary available',
-  image: gameData.image?.original_url || 'No image available',
+  id: gameData.id,
+  name: gameData.name,
+  deck: gameData.deck,
+  image: gameData.image?.original_url,
   platforms: Array.isArray(gameData.platforms) 
     ? gameData.platforms.map(platform => platform.name) 
     : [],

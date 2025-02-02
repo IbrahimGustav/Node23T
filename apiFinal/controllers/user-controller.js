@@ -1,16 +1,20 @@
-const userModel = require('../models/user-model');
-const bcrypt = require('bcrypt');
-const pool = require('../config/db');
+const {
+    userRegistration, 
+    userLogin, 
+    getAllUsers, 
+    updateUser, 
+    deleteUser
+} = require('../models/user-model');
 
 const userRegistration = async (req, res) => {
     const data = req.body;
     try {
-        const addUser = await userModel.userRegistration(data);
+        const addUser = await userRegistration(data);
         if (addUser) {
             return res.status(200).json({ id: addUser.id, hash: addUser.hash });
         }
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(400).json({ message: "Registration failed" });
     }
 };
@@ -18,21 +22,23 @@ const userRegistration = async (req, res) => {
 const userLogin = async (req, res) => {
     const data = req.body;
     try {
-        const response = await userModel.userLogin(data);
+        const response = await userLogin(data);
         if (response) {
             return res.json(response);
         }
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        return res.status(500).json({ message: "Login failed" });
     }
 };
 
 const getAllUsers = async (req, res) => {
     try {
-        const response = await userModel.getAllUsers();
+        const response = await getAllUsers();
         res.json(response);
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        return res.status(500).json({ message: "Failed to fetch users" });
     }
 };
 
@@ -45,37 +51,10 @@ const updateUser = async (req, res) => {
     }
 
     try {
-        const fieldsToUpdate = [];
-        const values = [];
-
-        if (username) {
-            fieldsToUpdate.push('username = ?');
-            values.push(username);
-        }
-
-        if (email) {
-            fieldsToUpdate.push('email = ?');
-            values.push(email);
-        }
-
-        if (password) {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            fieldsToUpdate.push('password = ?');
-            values.push(hashedPassword);
-        }
-
-        if (fieldsToUpdate.length === 0) {
-            return res.status(400).json({ message: 'No fields to update' });
-        }
-
-        values.push(userId);
-        const query = `UPDATE users SET ${fieldsToUpdate.join(', ')} WHERE id = ?;`;
-        const [result] = await pool.execute(query, values);
-
-        if (result.affectedRows === 0) {
+        const updatedUser = await updateUser(userId, { username, email, password });
+        if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
-
         return res.status(200).json({ message: 'User updated successfully' });
     } catch (error) {
         console.error('Error updating user:', error.message);
@@ -92,12 +71,10 @@ const deleteUser = async (req, res) => {
     }
 
     try {
-        const [result] = await pool.execute('DELETE FROM users WHERE id = ?', [userId]);
-
-        if (result.affectedRows === 0) {
+        const isDeleted = await deleteUser(userId);
+        if (!isDeleted) {
             return res.status(404).json({ message: `No user found with ID: ${userId}` });
         }
-
         return res.status(200).json({ message: `User with ID: ${userId} has been deleted successfully.` });
     } catch (error) {
         console.error('Error deleting user:', error.message);

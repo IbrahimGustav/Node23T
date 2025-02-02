@@ -8,7 +8,7 @@ const userRegistration = async (data) => {
     const { email, username, password } = data;
 
     if (!email || !username || !password) {
-        return "Data is not valid";
+        throw new Error("Data is not valid");
     }
 
     try {
@@ -20,7 +20,7 @@ const userRegistration = async (data) => {
             [email, username, hashedPassword]
         );
 
-        return { id: result.insertId, hashedPassword };
+        return { id: result.insertId, hash: hashedPassword };
     } catch (error) {
         console.error('Error during user registration:', error.message);
         throw new Error("User registration failed");
@@ -31,7 +31,7 @@ const userLogin = async (data) => {
     const { username, password } = data;
 
     if (!username || !password) {
-        return "User data not found";
+        throw new Error("User data not found");
     }
 
     try {
@@ -50,7 +50,7 @@ const userLogin = async (data) => {
                 username: result[0].username,
                 email: result[0].email
             };
-            const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
+            const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "12h" });
 
             return {
                 message: "Login successful",
@@ -65,7 +65,6 @@ const userLogin = async (data) => {
     }
 };
 
-
 const getAllUsers = async () => {
     try {
         const query = "SELECT * FROM users";
@@ -77,4 +76,65 @@ const getAllUsers = async () => {
     }
 };
 
-module.exports = { userRegistration, userLogin, getAllUsers };
+const updateUser = async (userId, { username, email, password }) => {
+    try {
+        const fieldsToUpdate = [];
+        const values = [];
+
+        if (username) {
+            fieldsToUpdate.push('username = ?');
+            values.push(username);
+        }
+
+        if (email) {
+            fieldsToUpdate.push('email = ?');
+            values.push(email);
+        }
+
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            fieldsToUpdate.push('password = ?');
+            values.push(hashedPassword);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            throw new Error('No fields to update');
+        }
+
+        values.push(userId);
+        const query = `UPDATE users SET ${fieldsToUpdate.join(', ')} WHERE id = ?;`;
+        const [result] = await db.query(query, values);
+
+        if (result.affectedRows === 0) {
+            return null;
+        }
+
+        return result;
+    } catch (error) {
+        console.error('Error updating user:', error.message);
+        throw new Error("Failed to update user");
+    }
+};
+
+const deleteUser = async (userId) => {
+    try {
+        const [result] = await db.query('DELETE FROM users WHERE id = ?', [userId]);
+
+        if (result.affectedRows === 0) {
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error deleting user:', error.message);
+        throw new Error("Failed to delete user");
+    }
+};
+
+module.exports = { 
+    userRegistration, 
+    userLogin, 
+    getAllUsers, 
+    updateUser, 
+    deleteUser 
+};

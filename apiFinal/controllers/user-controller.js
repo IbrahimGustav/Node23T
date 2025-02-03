@@ -1,15 +1,9 @@
-const {
-    userRegistration, 
-    userLogin, 
-    getAllUsers, 
-    updateUser, 
-    deleteUser
-} = require('../models/user-model');
+const userModel= require('../models/user-model');
 
 const userRegistration = async (req, res) => {
     const data = req.body;
     try {
-        const addUser = await userRegistration(data);
+        const addUser = await userModel.userRegistration(data);
         if (addUser) {
             return res.status(200).json({ id: addUser.id, hash: addUser.hash });
         }
@@ -22,7 +16,7 @@ const userRegistration = async (req, res) => {
 const userLogin = async (req, res) => {
     const data = req.body;
     try {
-        const response = await userLogin(data);
+        const response = await userModel.userLogin(data);
         if (response) {
             return res.json(response);
         }
@@ -34,7 +28,7 @@ const userLogin = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
     try {
-        const response = await getAllUsers();
+        const response = await userModel.getAllUsers();
         res.json(response);
     } catch (error) {
         console.error(error);
@@ -51,7 +45,7 @@ const updateUser = async (req, res) => {
     }
 
     try {
-        const updatedUser = await updateUser(userId, { username, email, password });
+        const updatedUser = await userModel.updateUser(userId, { username, email, password });
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -71,7 +65,7 @@ const deleteUser = async (req, res) => {
     }
 
     try {
-        const isDeleted = await deleteUser(userId);
+        const isDeleted = await userModel.deleteUser(userId);
         if (!isDeleted) {
             return res.status(404).json({ message: `No user found with ID: ${userId}` });
         }

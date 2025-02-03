@@ -1,19 +1,6 @@
 const cache = require('../config/cache');
 const jikan = require('../config/jikan');
-const {
-  createAnime,
-  createManga,
-  createSeasonsNow,
-  saveAnimeToDatabase,
-  saveMangaToDatabase,
-  getUserAnime,
-  getUserManga,
-  deleteAnime,
-  deleteManga,
-  getUserAnimeById,
-  getUserMangaById,
-  fetchFromJikan
-} = require('../models/jikan-model');
+const jikanModel = require('../models/jikan-model');
 
 const handleError = (res, error, defaultMessage = 'An error occurred') => {
   console.error(error.message);
@@ -27,7 +14,7 @@ const searchAnime = async (req, res) => {
   }
 
   try {
-    const animeResult = await fetchFromJikan('/anime', { q: query, limit: 5 }, createAnime, query);
+    const animeResult = await jikanModel.jikanModel.fetchFromJikan('/anime', { q: query, limit: 5 }, jikanModel.jikanModel.createAnime, query);
     res.status(200).json(animeResult);
   } catch (error) {
     handleError(res, error, 'Failed to fetch anime data');
@@ -41,7 +28,7 @@ const searchAnimeById = async (req, res) => {
   }
 
   try {
-    const animeData = await fetchFromJikan(`/anime/${id}`, {}, createAnime);
+    const animeData = await jikanModel.jikanModel.fetchFromJikan(`/anime/${id}`, {}, jikanModel.jikanModel.createAnime);
     if (!animeData) {
       return res.status(404).json({ message: 'Anime not found' });
     }
@@ -59,7 +46,7 @@ const searchMangaById = async (req, res) => {
   }
 
   try {
-    const mangaData = await fetchFromJikan(`/manga/${id}`, {}, createManga);
+    const mangaData = await jikanModel.jikanModel.fetchFromJikan(`/manga/${id}`, {}, jikanModel.jikanModel.createManga);
     if (!mangaData) {
       return res.status(404).json({ message: 'Manga not found' });
     }
@@ -73,7 +60,7 @@ const searchMangaById = async (req, res) => {
 const randomAnime = async (req, res) => {
   try {
     const response = await jikan.get('/random/anime');
-    const anime = createAnime(response.data.data);
+    const anime = jikanModel.jikanModel.createAnime(response.data.data);
     res.status(200).json(anime);
   } catch (error) {
     handleError(res, error, 'Failed to fetch random anime');
@@ -83,7 +70,7 @@ const randomAnime = async (req, res) => {
 const randomManga = async (req, res) => {
   try {
     const response = await jikan.get('/random/manga');
-    const manga = createManga(response.data.data);
+    const manga = jikanModel.jikanModel.createManga(response.data.data);
     res.status(200).json(manga);
   } catch (error) {
     handleError(res, error, 'Failed to fetch random manga');
@@ -92,7 +79,7 @@ const randomManga = async (req, res) => {
 
 const searchAnimeRanking = async (req, res) => {
   try {
-    const animeRankingResult = await fetchFromJikan('/anime', { order_by: 'score', sort: 'desc', limit: 50 }, createAnime);
+    const animeRankingResult = await jikanModel.jikanModel.fetchFromJikan('/anime', { order_by: 'score', sort: 'desc', limit: 50 }, jikanModel.jikanModel.createAnime);
     res.status(200).json(animeRankingResult);
   } catch (error) {
     handleError(res, error, 'Failed to fetch anime ranking');
@@ -106,7 +93,7 @@ const searchManga = async (req, res) => {
   }
 
   try {
-    const mangaResult = await fetchFromJikan('/manga', { q: query, limit: 5 }, createManga, query);
+    const mangaResult = await jikanModel.jikanModel.fetchFromJikan('/manga', { q: query, limit: 5 }, jikanModel.jikanModel.createManga, query);
     res.status(200).json(mangaResult);
   } catch (error) {
     handleError(res, error, 'Failed to fetch manga data');
@@ -115,7 +102,7 @@ const searchManga = async (req, res) => {
 
 const searchSeasonsNow = async (req, res) => {
   try {
-    const seasonsNowResult = await fetchFromJikan('/seasons/now', {}, createSeasonsNow);
+    const seasonsNowResult = await jikanModel.fetchFromJikan('/seasons/now', {}, jikanModel.createSeasonsNow);
     res.status(200).json(seasonsNowResult);
   } catch (error) {
     handleError(res, error, 'Failed to fetch current season anime');
@@ -131,12 +118,12 @@ const saveAnime = async (req, res) => {
   }
 
   try {
-    const animeData = await fetchFromJikan(`/anime/${id}`, {}, createAnime);
+    const animeData = await jikanModel.fetchFromJikan(`/anime/${id}`, {}, jikanModel.createAnime);
     if (!animeData || !animeData.mal_id) {
       return res.status(400).json({ message: 'Invalid anime data or MAL ID not found' });
     }
 
-    await saveAnimeToDatabase(animeData, userId);
+    await jikanModel.jikanModel.saveAnimeToDatabase(animeData, userId);
     res.status(200).json({ message: 'Anime saved successfully', anime: animeData });
   } catch (error) {
     handleError(res, error, 'Failed to save anime');
@@ -152,12 +139,12 @@ const saveManga = async (req, res) => {
   }
 
   try {
-    const mangaData = await fetchFromJikan(`/manga/${id}`, {}, createManga);
+    const mangaData = await jikanModel.fetchFromJikan(`/manga/${id}`, {}, jikanModel.createManga);
     if (!mangaData || !mangaData.mal_id) {
       return res.status(400).json({ message: 'Invalid manga data or MAL ID not found' });
     }
 
-    await saveMangaToDatabase(mangaData, userId);
+    await jikanModel.saveMangaToDatabase(mangaData, userId);
     res.status(200).json({ message: 'Manga saved successfully', manga: mangaData });
   } catch (error) {
     handleError(res, error, 'Failed to save manga');
@@ -171,7 +158,7 @@ const getUserAnime = async (req, res) => {
   }
 
   try {
-    const results = await getUserAnime(userId);
+    const results = await jikanModel.getUserAnime(userId);
     res.status(200).json({ message: 'Anime retrieved successfully', anime: results });
   } catch (error) {
     handleError(res, error, 'Failed to fetch user anime');
@@ -185,7 +172,7 @@ const getUserManga = async (req, res) => {
   }
 
   try {
-    const results = await getUserManga(userId);
+    const results = await jikanModel.getUserManga(userId);
     res.status(200).json({ message: 'Manga retrieved successfully', manga: results });
   } catch (error) {
     handleError(res, error, 'Failed to fetch user manga');
@@ -201,7 +188,7 @@ const deleteAnime = async (req, res) => {
   }
 
   try {
-    const isDeleted = await deleteAnime(id, userId);
+    const isDeleted = await jikanModel.deleteAnime(id, userId);
     if (!isDeleted) {
       return res.status(404).json({ message: 'Anime not found or not owned by user' });
     }
@@ -221,7 +208,7 @@ const deleteManga = async (req, res) => {
   }
 
   try {
-    const isDeleted = await deleteManga(id, userId);
+    const isDeleted = await jikanModel.deleteManga(id, userId);
     if (!isDeleted) {
       return res.status(404).json({ message: 'Manga not found or not owned by user' });
     }
@@ -235,7 +222,7 @@ const deleteManga = async (req, res) => {
 const getTopAnime = async (req, res) => {
   try {
     const response = await jikan.get('/top/anime', { params: { order_by: 'score' } });
-    const topAnime = response.data.data.map(createAnime);
+    const topAnime = response.data.data.map(jikanModel.createAnime);
     res.status(200).json(topAnime);
   } catch (error) {
     handleError(res, error, 'Failed to fetch top anime');
@@ -245,7 +232,7 @@ const getTopAnime = async (req, res) => {
 const getTopManga = async (req, res) => {
   try {
     const response = await jikan.get('/top/manga', { params: { order_by: 'score' } });
-    const topManga = response.data.data.map(createManga);
+    const topManga = response.data.data.map(jikanModel.createManga);
     res.status(200).json(topManga);
   } catch (error) {
     handleError(res, error, 'Failed to fetch top manga');
@@ -255,7 +242,7 @@ const getTopManga = async (req, res) => {
 const getTopAnimeCurrentSeason = async (req, res) => {
   try {
     const response = await jikan.get('/seasons/now', { params: { order_by: 'score' } });
-    const topCurrentSeason = response.data.data.map(createAnime);
+    const topCurrentSeason = response.data.data.map(jikanModel.createAnime);
     res.status(200).json(topCurrentSeason);
   } catch (error) {
     handleError(res, error, 'Failed to fetch top anime of the current season');
@@ -275,7 +262,7 @@ const getUserAnimeById = async (req, res) => {
   }
 
   try {
-    const anime = await getUserAnimeById(userId, id);
+    const anime = await jikanModel.getUserAnimeById(userId, id);
     if (!anime) {
       return res.status(404).json({ message: 'Anime not found for this user' });
     }
@@ -299,7 +286,7 @@ const getUserMangaById = async (req, res) => {
   }
 
   try {
-    const manga = await getUserMangaById(userId, id);
+    const manga = await jikanModel.getUserMangaById(userId, id);
     if (!manga) {
       return res.status(404).json({ message: 'Manga not found for this user' });
     }

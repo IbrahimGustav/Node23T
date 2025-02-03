@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 const jikan = require('../config/jikan');
-const cache = require('../config/cache'); // Ensure cache is imported
+const cache = require('../config/cache');
 
 const fetchFromJikan = async (endpoint, params = {}, createFunc, cacheKey = null) => {
   if (cacheKey && cache.has(cacheKey)) {

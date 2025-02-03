@@ -1,5 +1,3 @@
-const giantbomb = require('../config/giantbomb');
-const cache = require('../config/cache');
 const gameModel = require('../models/giantbomb-model');
 
 const handleError = (res, error, defaultMessage = 'An error occurred') => {
@@ -22,24 +20,29 @@ const searchGame = async (req, res) => {
       field_list: 'id,name,deck,image,platforms',
     }, cacheKey);
 
-    res.json(games);
+    res.status(200).json(games);
   } catch (error) {
     handleError(res, error, 'Failed to fetch data from Giant Bomb API');
   }
 };
 
 const searchGameByID = async (req, res) => {
-  const gameId = req.params.id;
-  if (!gameId) {
-    return res.status(400).json({ message: 'Game ID is required' });
+  const gameId = parseInt(req.params.id, 10);
+  if (isNaN(gameId)) {
+    return res.status(400).json({ message: 'Invalid Game ID' });
   }
 
   try {
     const cacheKey = `gameDetails:${gameId}`;
     const game = await gameModel.fetchFromGiantbomb(`/game/${gameId}`, {}, cacheKey);
-    res.json(game);
+
+    if (!game) {
+      return res.status(404).json({ message: 'Game not found' });
+    }
+
+    res.status(200).json(game);
   } catch (error) {
-    handleError(res, error, 'Failed to fetch game details from Giant Bomb API');
+    handleError(res, error, 'Failed to fetch game details');
   }
 };
 
@@ -53,11 +56,15 @@ const saveGame = async (req, res) => {
 
   try {
     const cacheKey = `gameDetails:${id}`;
-    const response = await gameModel.fetchFromGiantbomb(`/game/${id}`, { field_list: 'id,name,deck,image,platforms' }, cacheKey);
-    const gameData = gameModel.createGame(response);
+    const gameData = await gameModel.fetchFromGiantbomb(`/game/${id}`, {
+      field_list: 'id,name,deck,image,platforms'
+    }, cacheKey);
+
+    if (!gameData) {
+      return res.status(404).json({ message: 'Game not found' });
+    }
 
     await gameModel.saveGameToDatabase(gameData, userId);
-
     res.status(201).json({ message: 'Game saved successfully' });
   } catch (error) {
     handleError(res, error, 'Failed to save game');
@@ -72,7 +79,7 @@ const getUserGames = async (req, res) => {
   }
 
   try {
-    const results = await ggameModel.etUserGamesFromDatabase(userId);
+    const results = await gameModel.getUserGamesFromDatabase(userId);
     res.status(200).json({ message: 'Games retrieved successfully', games: results });
   } catch (error) {
     handleError(res, error, 'Failed to fetch user games');
@@ -88,9 +95,9 @@ const deleteGame = async (req, res) => {
   }
 
   try {
-    const affectedRows = await gameModel.deleteGameFromDatabase(id, userId);
+    const success = await gameModel.deleteGameFromDatabase(id, userId);
 
-    if (affectedRows === 0) {
+    if (!success) {
       return res.status(404).json({ message: 'Game not found or not owned by user' });
     }
 
@@ -113,17 +120,18 @@ const getUserGameById = async (req, res) => {
   }
 
   try {
-    const results = await gameModel.getUserGameByIdFromDatabase(userId, id);
+    const game = await gameModel.getUserGameByIdFromDatabase(userId, id);
 
-    if (results.length === 0) {
+    if (!game) {
       return res.status(404).json({ message: 'Game not found for this user' });
     }
 
-    res.status(200).json({ message: 'Game retrieved successfully', game: results[0] });
+    res.status(200).json({ message: 'Game retrieved successfully', game });
   } catch (error) {
     handleError(res, error, 'Failed to fetch user game');
   }
 };
+
 
 module.exports = {
   searchGame,

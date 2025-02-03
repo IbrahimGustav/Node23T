@@ -17,7 +17,9 @@ const fetchFromGiantbomb = async (endpoint, params = {}, cacheKey = null) => {
 
     const result = Array.isArray(response.data.results)
       ? response.data.results.map(createGame)
-      : createGame(response.data.results);
+      : response.data.results
+      ? createGame(response.data.results)
+      : [];
 
     if (cacheKey) cache.set(cacheKey, result);
 
@@ -28,59 +30,55 @@ const fetchFromGiantbomb = async (endpoint, params = {}, cacheKey = null) => {
   }
 };
 
-
 const createGame = (gameData) => ({
   id: gameData.id,
   name: gameData.name,
   deck: gameData.deck,
   image: gameData.image?.original_url,
-  platforms: Array.isArray(gameData.platforms) 
-    ? gameData.platforms.map(platform => platform.name) 
-    : [],
+  platforms: Array.isArray(gameData.platforms) ? gameData.platforms.map(p => p.name) : [],
 });
 
 const saveGameToDatabase = async (gameData, userId) => {
-    const { id, name, deck, image } = gameData;
-    
-    const query = `
-        INSERT INTO games (id, name, deck, image_url, user_id)
-        VALUES (?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE 
-            name = VALUES(name),
-            deck = VALUES(deck),
-            image_url = VALUES(image_url);
-    `;
+  const { id, name, deck, image } = gameData;
 
-    await pool.execute(query, [id, name, deck, image, userId]);
+  const query = `
+      INSERT INTO games (id, name, deck, image_url, user_id)
+      VALUES (?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE 
+          name = VALUES(name),
+          deck = VALUES(deck),
+          image_url = VALUES(image_url),
+          user_id = VALUES(user_id);
+  `;
+
+  await pool.execute(query, [id, name, deck, image, userId]);
 };
 
 const getUserGamesFromDatabase = async (userId) => {
-    const query = `
-        SELECT id, name, deck, image_url
-        FROM games
-        WHERE user_id = ?;
-    `;
-    const [results] = await pool.execute(query, [userId]);
-    return results;
+  const query = `SELECT id, name, deck, image_url FROM games WHERE user_id = ?;`;
+  const [results] = await pool.execute(query, [userId]);
+  return results;
 };
 
 const deleteGameFromDatabase = async (id, userId) => {
-    const query = `DELETE FROM games WHERE id = ? AND user_id = ?;`;
-    const [result] = await pool.execute(query, [id, userId]);
-    return result.affectedRows;
+  const query = `DELETE FROM games WHERE id = ? AND user_id = ?;`;
+  const [result] = await pool.execute(query, [id, userId]);
+  return result.affectedRows > 0;
 };
 
 const getUserGameByIdFromDatabase = async (userId, id) => {
-    const query = `SELECT id, name, deck, image_url FROM games WHERE user_id = ? AND id = ?;`;
-    const [results] = await pool.execute(query, [userId, id]);
-    return results;
+  const query = `SELECT id, name, deck, image_url FROM games WHERE user_id = ? AND id = ?;`;
+  const [results] = await pool.execute(query, [userId, id]);
+  
+  return results.length > 0 ? results[0] : null; // Ensure null is returned explicitly
 };
 
+
 module.exports = { 
-    createGame, 
-    saveGameToDatabase, 
-    getUserGamesFromDatabase, 
-    deleteGameFromDatabase, 
-    getUserGameByIdFromDatabase,
-    fetchFromGiantbomb
+  createGame, 
+  saveGameToDatabase, 
+  getUserGamesFromDatabase, 
+  deleteGameFromDatabase, 
+  getUserGameByIdFromDatabase,
+  fetchFromGiantbomb
 };
